@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+apscheduler
+pydantic
+# optional, only needed if GEMINI_API_KEY is set:
+google-generativeai
