@@ -3,7 +3,7 @@ import FacilityGauge from "./FacilityGauge.jsx";
 import Teletype from "./Teletype.jsx";
 import "./App.css";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://lng-ops-pulse.onrender.com";
 
 function useClock() {
   const [now, setNow] = useState(new Date());
