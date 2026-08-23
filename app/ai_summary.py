@@ -9,7 +9,15 @@ rule-based summary so the demo runs with zero external dependencies.
 """
 from __future__ import annotations
 
+import logging
 import os
+
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env in the project root if present; no-op if missing
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("lng-ops-pulse.ai_summary")
 
 
 def _rule_based_summary(kpis: list[dict], anomalies: list[dict]) -> str:
@@ -47,13 +55,13 @@ def _rule_based_summary(kpis: list[dict], anomalies: list[dict]) -> str:
 def _gemini_summary(kpis: list[dict], anomalies: list[dict]) -> str | None:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
+        logger.warning("GEMINI_API_KEY not set — using rule-based fallback.")
         return None
 
     try:
-        import google.generativeai as genai
+        from google import genai
 
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        client = genai.Client(api_key=api_key)
 
         prompt = (
             "You are an LNG plant operations analyst. Write a 3-4 sentence "
@@ -61,16 +69,20 @@ def _gemini_summary(kpis: list[dict], anomalies: list[dict]) -> str | None:
             "flag anything that needs attention, and skip generic filler.\n\n"
             f"KPIs: {kpis}\n\nAnomalies: {anomalies}"
         )
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt,
+        )
         return response.text.strip()
-    except Exception:
-        # Any API/network issue -> fall back rather than break the endpoint
+    except Exception as e:
+        # Log the real reason instead of failing silently
+        logger.error("Gemini call failed, falling back to rule-based summary: %s", e)
         return None
 
 
 def generate_daily_summary(kpis: list[dict], anomalies: list[dict]) -> dict:
     ai_text = _gemini_summary(kpis, anomalies)
     if ai_text:
-        return {"summary": ai_text, "source": "gemini-2.0-flash"}
+        return {"summary": ai_text, "source": "gemini-3.6-flash"}
 
     return {"summary": _rule_based_summary(kpis, anomalies), "source": "rule-based-fallback"}

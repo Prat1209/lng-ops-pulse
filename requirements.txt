@@ -4,5 +4,6 @@ pandas
 numpy
 apscheduler
 pydantic
+python-dotenv
 # optional, only needed if GEMINI_API_KEY is set:
-google-generativeai
+google-genai
