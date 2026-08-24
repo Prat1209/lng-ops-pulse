@@ -5,9 +5,9 @@ import {
 } from "recharts";
 
 const FACILITY_COLORS = {
-  "Calcasieu Pass": "#2ee6b8",
-  Cameron: "#4fb0ff",
-  Plaquemines: "#ffa83d",
+  "Calcasieu Pass": "#3ec4ff",
+  Cameron: "#b26bff",
+  Plaquemines: "#ff9d1f",
 };
 
 const RANGE_OPTIONS = [
