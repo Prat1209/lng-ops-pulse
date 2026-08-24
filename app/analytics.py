@@ -38,6 +38,34 @@ def get_kpis() -> list[dict]:
     return results
 
 
+def get_production_history() -> list[dict]:
+    """
+    Full daily production series per facility, shaped for charting:
+    one row per date with each facility as a column, plus per-facility
+    anomaly flags so the frontend can mark them directly on the line.
+    """
+    df = PRODUCTION_DF.copy()
+    df["date"] = pd.to_datetime(df["date"])
+
+    anomaly_dates = {}
+    for a in detect_anomalies(lookback_days=len(df["date"].unique())):
+        anomaly_dates.setdefault(a["facility"], set()).add(a["date"])
+
+    pivot = df.pivot(index="date", columns="facility", values="production_mmbtu_k").sort_index()
+
+    rows = []
+    for date, row in pivot.iterrows():
+        date_str = date.date().isoformat()
+        entry = {"date": date_str}
+        for facility in pivot.columns:
+            value = row[facility]
+            entry[facility] = None if pd.isna(value) else round(float(value), 1)
+            entry[f"{facility}_anomaly"] = date_str in anomaly_dates.get(facility, set())
+        rows.append(entry)
+
+    return rows
+
+
 def detect_anomalies(z_threshold: float = 1.8, lookback_days: int = 30) -> list[dict]:
     """
     Flag days where a facility's production deviates more than

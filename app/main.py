@@ -18,7 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .analytics import detect_anomalies, get_kpis
+from .analytics import detect_anomalies, get_kpis, get_production_history
 from .ai_summary import generate_daily_summary
 from .automation import start_scheduler
 from .chat import answer_question
@@ -71,6 +71,12 @@ def kpis():
 def anomalies():
     """Production anomalies flagged via trailing z-score detection."""
     return detect_anomalies()
+
+
+@app.get("/production-history")
+def production_history():
+    """Full daily production series per facility, with anomaly flags, for charting."""
+    return get_production_history()
 
 
 @app.get("/shipments")

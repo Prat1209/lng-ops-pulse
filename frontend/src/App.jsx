@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import FacilityGauge from "./FacilityGauge.jsx";
 import Teletype from "./Teletype.jsx";
 import OpsChat from "./OpsChat.jsx";
+import ProductionChart from "./ProductionChart.jsx";
 import "./App.css";
 
 const API_BASE = "https://lng-ops-pulse.onrender.com";
@@ -20,6 +21,7 @@ export default function App() {
   const [anomalies, setAnomalies] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [history, setHistory] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const clock = useClock();
@@ -27,14 +29,15 @@ export default function App() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [kpisRes, anomaliesRes, shipmentsRes, summaryRes] = await Promise.all([
+        const [kpisRes, anomaliesRes, shipmentsRes, summaryRes, historyRes] = await Promise.all([
           fetch(`${API_BASE}/kpis`),
           fetch(`${API_BASE}/anomalies`),
           fetch(`${API_BASE}/shipments`),
           fetch(`${API_BASE}/summary`),
+          fetch(`${API_BASE}/production-history`),
         ]);
 
-        if (!kpisRes.ok || !anomaliesRes.ok || !shipmentsRes.ok || !summaryRes.ok) {
+        if (!kpisRes.ok || !anomaliesRes.ok || !shipmentsRes.ok || !summaryRes.ok || !historyRes.ok) {
           throw new Error("One or more endpoints returned an error.");
         }
 
@@ -42,6 +45,7 @@ export default function App() {
         setAnomalies(await anomaliesRes.json());
         setShipments(await shipmentsRes.json());
         setSummary(await summaryRes.json());
+        setHistory(await historyRes.json());
         setError(null);
       } catch (e) {
         setError(
@@ -92,6 +96,8 @@ export default function App() {
               <div className="gauge-placeholder">Loading facility data…</div>
             )}
           </section>
+
+          {history.length > 0 && <ProductionChart data={history} />}
 
           <section className="mid-row">
             <div className="panel anomaly-panel">
