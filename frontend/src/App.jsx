@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import FacilityGauge from "./FacilityGauge.jsx";
 import Teletype from "./Teletype.jsx";
+import OpsChat from "./OpsChat.jsx";
 import "./App.css";
 
 const API_BASE = "https://lng-ops-pulse.onrender.com";
@@ -117,6 +118,8 @@ export default function App() {
 
             <Teletype text={summary?.summary} sourceLabel={summary?.source} />
           </section>
+
+          <OpsChat />
 
           <section className="panel manifest-panel">
             <div className="panel-header">SHIPMENT MANIFEST</div>

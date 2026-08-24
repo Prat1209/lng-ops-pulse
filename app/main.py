@@ -16,11 +16,23 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from .analytics import detect_anomalies, get_kpis
 from .ai_summary import generate_daily_summary
 from .automation import start_scheduler
+from .chat import answer_question
 from .data import INCIDENTS_DF, SHIPMENTS_DF
+
+
+class ChatTurn(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list[ChatTurn] = []
 
 
 @asynccontextmanager
@@ -77,3 +89,16 @@ def incidents():
 def summary():
     """AI-generated plain-English daily ops briefing."""
     return generate_daily_summary(get_kpis(), detect_anomalies())
+
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    """Ask a free-form operational question, answered using live data."""
+    return answer_question(
+        question=request.question,
+        history=[turn.model_dump() for turn in request.history],
+        kpis=get_kpis(),
+        anomalies=detect_anomalies(),
+        shipments=SHIPMENTS_DF.to_dict(orient="records"),
+        incidents=INCIDENTS_DF.to_dict(orient="records"),
+    )
